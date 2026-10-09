@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local editor settings
+.vscode/
+
+# Kobo databases and private device data
+.kobo/
+.Kobo/
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+
+# Personal annotation exports
+exports/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
