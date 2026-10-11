@@ -66,7 +66,14 @@ def load_books(folder):
         db.close()
 
 
-CSS = '\n:root { color-scheme: light; --ink:#25282e; --muted:#69717d; --line:#e0e3e8; }\n* { box-sizing:border-box; } body { margin:0; color:var(--ink); background:#f4f5f7; font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif; }\nmain { max-width:940px; margin:38px auto; padding:38px 48px; background:white; border:1px solid var(--line); border-radius:12px; }\nh1 { font-size:30px; line-height:1.2; margin:0 0 8px; } h2 { font-size:25px; line-height:1.3; margin:0; }\n.subtitle,.meta,.author { color:var(--muted); } .subtitle { margin-top:0; } .author { margin:6px 0 22px; }\nnav { padding:20px; background:#f6f7f9; border-radius:8px; } a { color:#345d9d; } nav a { display:block; }\n.book { margin-top:44px; scroll-margin-top:20px; } .entry { padding:22px 0; border-top:1px solid var(--line); }\n.meta { font-size:13px; margin-bottom:10px; } blockquote { margin:0; padding:3px 0 3px 18px; border-left:3px solid #e3b849; white-space:pre-wrap; font:18px/1.75 Georgia,serif; overflow-wrap:anywhere; }\n.note { margin-top:14px; padding:14px 18px; background:#f7f8fa; border-radius:6px; white-space:pre-wrap; overflow-wrap:anywhere; }\n.note-label { font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); display:block; }\n.toolbar { display:flex; gap:10px; margin:22px 0; } button { padding:8px 15px; border:1px solid #ccd1d8; border-radius:5px; background:white; cursor:pointer; }\nfooter { margin-top:36px; color:var(--muted); font-size:12px; } .location { overflow-wrap:anywhere; }\n@media(max-width:650px) { main { margin:0; border:0; border-radius:0; padding:25px 20px; } }\n@media print { body { background:white; } main { max-width:none; margin:0; padding:0; border:0; } .toolbar { display:none; } .entry { break-inside:avoid; } a { color:inherit; } }\n'
+CSS = """\n:root { color-scheme: light; --ink:#25282e; --muted:#69717d; --line:#e0e3e8; }\n* { box-sizing:border-box; } body { margin:0; color:var(--ink); background:#f4f5f7; font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif; }\nmain { max-width:940px; margin:38px auto; padding:38px 48px; background:white; border:1px solid var(--line); border-radius:12px; }\nh1 { font-size:30px; line-height:1.2; margin:0 0 8px; } h2 { font-size:25px; line-height:1.3; margin:0; }\n.subtitle,.meta,.author { color:var(--muted); } .subtitle { margin-top:0; } .author { margin:6px 0 22px; }\nnav { padding:20px; background:#f6f7f9; border-radius:8px; } a { color:#345d9d; } nav a { display:block; }\n.book { margin-top:44px; scroll-margin-top:20px; } .entry { padding:22px 0; border-top:1px solid var(--line); }\n.meta { font-size:13px; margin-bottom:10px; } blockquote { margin:0; padding:3px 0 3px 18px; border-left:3px solid #e3b849; white-space:pre-wrap; font:18px/1.75 Georgia,serif; overflow-wrap:anywhere; }\n.note { margin-top:14px; padding:14px 18px; background:#f7f8fa; border-radius:6px; white-space:pre-wrap; overflow-wrap:anywhere; }\n.note-label { font-size:12px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); display:block; }\n.toolbar { display:flex; gap:10px; margin:22px 0; } button { padding:8px 15px; border:1px solid #ccd1d8; border-radius:5px; background:white; cursor:pointer; }\nfooter { margin-top:36px; color:var(--muted); font-size:12px; } .location { overflow-wrap:anywhere; }\n.copy-button {
+    margin-top:10px;
+    padding:5px 12px;
+    font-size:13px;
+}
+@media print {
+    .copy-button { display:none; }
+}@media(max-width:650px) { main { margin:0; border:0; border-radius:0; padding:25px 20px; } }\n@media print { body { background:white; } main { max-width:none; margin:0; padding:0; border:0; } .toolbar { display:none; } .entry { break-inside:avoid; } a { color:inherit; } }\n"""
 
 
 def render_html(books):
@@ -91,14 +98,73 @@ def render_html(books):
                 labels.append(str(item['datecreated']))
             parts.append('<article class="entry"><div class="meta">' + esc(' · '.join(labels)) + '</div>')
             if item.get('text'):
-                parts.append('<blockquote>' + esc(item['text']) + '</blockquote>')
+                parts.append(
+                    '<blockquote>' + esc(item['text']) + '</blockquote>'
+                    '<button class="copy-button" type="button" '
+                    'data-copy="' + esc(item['text']) + '" '
+                    'onclick="copyText(this.dataset.copy, this)">'
+                    'Copy highlight</button>'
+                )
+
             if item.get('annotation'):
-                parts.append('<div class="note"><span class="note-label">Your note</span>' + esc(item['annotation']) + '</div>')
+                parts.append(
+                    '<div class="note"><span class="note-label">Your note</span>'
+                    + esc(item['annotation']) + '</div>'
+                    '<button class="copy-button" type="button" '
+                    'data-copy="' + esc(item['annotation']) + '" '
+                    'onclick="copyText(this.dataset.copy, this)">'
+                    'Copy note</button>'
+                )
             location = item.get('startcontainerpath')
             if location:
                 parts.append('<details class="meta location"><summary>Source location</summary>' + esc(location) + '</details>')
             parts.append('</article>')
         parts.append('</section>')
+    parts.append("""
+<script>
+async function copyText(text, button) {
+    let copied = false;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+        }
+    } catch (_) {}
+
+    if (!copied) {
+        const field = document.createElement('textarea');
+        field.value = text;
+        field.style.position = 'fixed';
+        field.style.left = '-9999px';
+        document.body.appendChild(field);
+        field.focus();
+        field.select();
+
+        try {
+            copied = document.execCommand('copy');
+        } catch (_) {}
+
+        field.remove();
+        button.focus();
+    }
+
+    if (!copied) {
+        window.prompt('Copy this text manually:', text);
+        return;
+    }
+
+    const original = button.dataset.originalLabel || button.textContent;
+    button.dataset.originalLabel = original;
+    button.textContent = 'Copied!';
+
+    clearTimeout(button._copyTimer);
+    button._copyTimer = setTimeout(() => {
+        button.textContent = original;
+    }, 1500);
+}
+</script>
+    """)
     parts.append('<footer>Exported locally on ' + esc(datetime.now().strftime('%Y-%m-%d %H:%M')) + '. Entries are ordered by creation date. Source locations are not Kindle locations or reliable page numbers.</footer></main></body></html>')
     return '\n'.join(parts)
 
@@ -135,7 +201,17 @@ class App:
         bottom=ttk.Frame(frame); bottom.pack(fill='x', pady=(14,0))
         self.open_after = tk.BooleanVar(value=True)
         ttk.Checkbutton(bottom, text='Open HTML after export', variable=self.open_after).pack(side='left')
-        ttk.Button(bottom, text='Export selected books…', command=self.export).pack(side='right')
+        ttk.Button(
+            bottom,
+            text='Export individual files…',
+            command=self.export
+        ).pack(side='right')
+
+        ttk.Button(
+            bottom,
+            text='Export combined file…',
+            command=lambda: self.export(combined=True)
+        ).pack(side='right', padx=(0, 8))
         self.status = ttk.Label(frame, text='Connect your Kobo by USB and allow the computer connection.'); self.status.pack(anchor='w', pady=(12,0))
 
     def choose(self):
@@ -163,21 +239,75 @@ class App:
     def status_update(self):
         self.status.config(text=f'{len(self.books)} annotated book(s) loaded · {len(self.tree.get_children())} visible · {len(self.tree.selection())} selected. Ctrl/Cmd-click or Shift-click to select multiple.')
 
-    def export(self):
+    def export(self, combined=False):
         selected = [self.books[int(i)] for i in self.tree.selection()]
-        if not selected:
-            messagebox.showinfo('Select books', 'Select one or more books first.'); return
-        name = selected[0]['title'] if len(selected)==1 else 'Kobo Notes and Highlights'
-        name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', name).strip(' .')[:100] or 'Kobo Notebook'
-        target = filedialog.asksaveasfilename(title='Save HTML notebook', initialfile=name+'.html', defaultextension='.html', filetypes=[('HTML file','*.html')])
-        if not target: return
-        try:
-            Path(target).write_text(render_html(selected), encoding='utf-8')
-            self.status.config(text=f'Exported {len(selected)} book(s) to {target}')
-            if self.open_after.get(): webbrowser.open(Path(target).resolve().as_uri())
-        except Exception as exc:
-            messagebox.showerror('Export failed', str(exc))
 
+        if not selected:
+            messagebox.showinfo('Select books', 'Select one or more books first.')
+            return
+
+        def safe_name(title):
+            return (
+                re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', title)
+                .strip(' .')[:100]
+                or 'Kobo Notebook'
+            )
+
+        try:
+            if len(selected) == 1 or combined:
+                name = (
+                    safe_name(selected[0]['title'])
+                    if len(selected) == 1
+                    else 'Kobo Notes and Highlights'
+                )
+
+                target = filedialog.asksaveasfilename(
+                    title='Save HTML notebook',
+                    initialfile=name + '.html',
+                    defaultextension='.html',
+                    filetypes=[('HTML file', '*.html')]
+                )
+
+                if not target:
+                    return
+
+                path = Path(target)
+                path.write_text(render_html(selected), encoding='utf-8')
+                created = [path]
+
+            else:
+                folder = filedialog.askdirectory(
+                    title='Choose folder for individual book exports',
+                    mustexist=True
+                )
+
+                if not folder:
+                    return
+
+                created = []
+
+                for book in selected:
+                    name = safe_name(book['title'])
+                    path = Path(folder) / (name + '.html')
+                    suffix = 2
+
+                    while path.exists():
+                        path = Path(folder) / f'{name} ({suffix}).html'
+                        suffix += 1
+
+                    path.write_text(render_html([book]), encoding='utf-8')
+                    created.append(path)
+
+            self.status.config(
+                text=f'Exported {len(selected)} book(s) into {len(created)} HTML file(s).'
+            )
+
+            if self.open_after.get():
+                for path in created:
+                    webbrowser.open(path.resolve().as_uri())
+
+        except Exception as exc:
+            messagebox.showerror('Export failed', str(exc))   
 
 if __name__ == '__main__':
     import tkinter as tk
