@@ -183,6 +183,19 @@ def render_html(books):
         </button>
     </div>
 
+        <div class="quote-controls">
+        <label>
+            <input id="quote-include-title" type="checkbox"
+                   onchange="drawQuoteImage()">
+            Include book name
+        </label>
+
+        <label>
+            <input id="quote-include-author" type="checkbox"
+                   onchange="drawQuoteImage()">
+            Include author name
+        </label>
+    </div>
     <canvas id="quote-canvas" width="1080" height="1080"
             aria-label="Square quote image preview"></canvas>
 
@@ -209,6 +222,8 @@ function openQuoteImage(button) {
         title: button.dataset.title,
         author: button.dataset.author
     };
+        document.getElementById('quote-include-title').checked = false;
+    document.getElementById('quote-include-author').checked = false;
     document.getElementById('quote-dialog').showModal();
     drawQuoteImage();
 }
@@ -217,16 +232,20 @@ function quoteLines(ctx, text, width) {
     const lines = [];
 
     for (const paragraph of text.split(String.fromCharCode(10))) {
+        const tokens = paragraph.match(/\\s+|[—–]|[^\\s—–]+/g) || [];
         let line = '';
 
-        for (const character of Array.from(paragraph)) {
-            const next = line + character;
+        for (const token of tokens) {
+            const candidate = line + token;
 
-            if (line && ctx.measureText(next).width > width) {
+            if (
+                line.trim() &&
+                ctx.measureText(candidate.trimEnd()).width > width
+            ) {
                 lines.push(line.trimEnd());
-                line = character.trimStart();
+                line = token.trimStart();
             } else {
-                line = next;
+                line = candidate;
             }
         }
 
@@ -263,19 +282,39 @@ function drawQuoteImage() {
     ctx.fillStyle = brightness > 0.179 ? '#111111' : '#ffffff';
     ctx.textBaseline = 'top';
 
-    const attribution =
-        quoteImageData.title + ' — ' + quoteImageData.author;
+    const attributionParts = [];
+
+    if (document.getElementById('quote-include-title').checked) {
+        attributionParts.push(quoteImageData.title);
+    }
+
+    if (document.getElementById('quote-include-author').checked) {
+        attributionParts.push(quoteImageData.author);
+    }
+
+    const attribution = attributionParts
+        .filter(value => value && value.trim())
+        .join(' — ');
 
     ctx.font = '26px sans-serif';
-    const sourceLines = quoteLines(ctx, attribution, 904);
+    const sourceLines = attribution
+        ? quoteLines(ctx, attribution, 904)
+        : [];
+
     const sourceHeight = sourceLines.length * 36;
+    const sourceGap = sourceLines.length ? 48 : 0;
     let layout = null;
 
     for (let size = 58; size >= 22; size -= 2) {
         ctx.font = size + 'px Georgia, serif';
-        const lines = quoteLines(ctx, quoteImageData.text, 904);
+                const lines = quoteLines(ctx, quoteImageData.text, 904);
+
+        if (lines.some(line => ctx.measureText(line).width > 904)) {
+            continue;
+        }
+
         const lineHeight = Math.ceil(size * 1.45);
-        const height = lines.length * lineHeight + 48 + sourceHeight;
+        const height = lines.length * lineHeight + sourceGap + sourceHeight;
 
         if (height <= 904) {
             layout = {size, lines, lineHeight, height};
@@ -302,7 +341,7 @@ function drawQuoteImage() {
         y += layout.lineHeight;
     }
 
-    y += 48;
+    y += sourceGap;
     ctx.font = '26px sans-serif';
 
     for (const line of sourceLines) {
