@@ -70,10 +70,46 @@ CSS = """\n:root { color-scheme: light; --ink:#25282e; --muted:#69717d; --line:#
     margin-top:10px;
     padding:5px 12px;
     font-size:13px;
-}
+}\n
 @media print {
-    .copy-button { display:none; }
-}@media(max-width:650px) { main { margin:0; border:0; border-radius:0; padding:25px 20px; } }\n@media print { body { background:white; } main { max-width:none; margin:0; padding:0; border:0; } .toolbar { display:none; } .entry { break-inside:avoid; } a { color:inherit; } }\n"""
+    .copy-button { display:none; }\n
+}@media(max-width:650px) { main { margin:0; border:0; border-radius:0; padding:25px 20px; } }\n@media print { body { background:white; } main { max-width:none; margin:0; padding:0; border:0; }\n .toolbar { display:none; }\n .entry { break-inside:avoid; }\n a { color:inherit; } }\n.quote-dialog {
+    width: min(560px, 94vw);
+    max-height: 92vh;
+    overflow: auto;
+    border: 1px solid #ccd1d8;
+    border-radius: 12px;
+    padding: 22px;
+    color: #25282e;
+    background: white;
+}\n
+.quote-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+}\n
+.quote-dialog h2 {
+    font-size: 22px;
+    margin-bottom: 14px;
+}\n
+.quote-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}\n
+#quote-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+}\n
+#quote-status {
+    font-size: 13px;
+    min-height: 22px;
+}\n
+@media print {
+    .quote-dialog { display: none !important; }
+}\n"""
 
 
 def render_html(books):
@@ -115,11 +151,223 @@ def render_html(books):
                     'onclick="copyText(this.dataset.copy, this)">'
                     'Copy note</button>'
                 )
+            for field, label in (
+                ('text', 'Create quote image'),
+                ('annotation', 'Create note image')
+            ):
+                if item.get(field):
+                    parts.append(
+                        '<button class="copy-button" type="button" '
+                        'data-text="' + esc(item[field]) + '" '
+                        'data-title="' + esc(book['title']) + '" '
+                        'data-author="' + esc(book['author']) + '" '
+                        'onclick="openQuoteImage(this)">'
+                        + label + '</button>'
+                    )
             location = item.get('startcontainerpath')
             if location:
                 parts.append('<details class="meta location"><summary>Source location</summary>' + esc(location) + '</details>')
             parts.append('</article>')
         parts.append('</section>')
+    parts.append("""
+<dialog id="quote-dialog" class="quote-dialog">
+    <h2>Create quote image</h2>
+
+    <div class="quote-controls">
+        <label for="quote-background">Background</label>
+        <input id="quote-background" type="color" value="#f4ecd8"
+               oninput="drawQuoteImage()">
+        <button type="button"
+                onclick="document.getElementById('quote-dialog').close()">
+            Close
+        </button>
+    </div>
+
+    <canvas id="quote-canvas" width="1080" height="1080"
+            aria-label="Square quote image preview"></canvas>
+
+    <div class="quote-controls">
+        <button id="quote-copy" type="button" onclick="copyQuoteImage()">
+            Copy image
+        </button>
+        <button id="quote-download" type="button"
+                onclick="downloadQuoteImage()">
+            Download PNG
+        </button>
+    </div>
+
+    <p id="quote-status" role="status"></p>
+</dialog>
+
+<script>
+let quoteImageData = null;
+let quoteImageReady = false;
+
+function openQuoteImage(button) {
+    quoteImageData = {
+        text: button.dataset.text,
+        title: button.dataset.title,
+        author: button.dataset.author
+    };
+    document.getElementById('quote-dialog').showModal();
+    drawQuoteImage();
+}
+
+function quoteLines(ctx, text, width) {
+    const lines = [];
+
+    for (const paragraph of text.split(String.fromCharCode(10))) {
+        let line = '';
+
+        for (const character of Array.from(paragraph)) {
+            const next = line + character;
+
+            if (line && ctx.measureText(next).width > width) {
+                lines.push(line.trimEnd());
+                line = character.trimStart();
+            } else {
+                line = next;
+            }
+        }
+
+        lines.push(line.trimEnd());
+    }
+
+    return lines;
+}
+
+function drawQuoteImage() {
+    if (!quoteImageData) return;
+
+    const canvas = document.getElementById('quote-canvas');
+    const ctx = canvas.getContext('2d');
+    const status = document.getElementById('quote-status');
+    const background = document.getElementById('quote-background').value;
+
+    quoteImageReady = false;
+    ctx.fillStyle = background;
+    ctx.fillRect(0, 0, 1080, 1080);
+
+    const rgb = background.match(/[a-f0-9]{2}/gi).map(x => parseInt(x, 16));
+    const luminance = rgb.map(value => {
+        const channel = value / 255;
+        return channel <= 0.04045
+            ? channel / 12.92
+            : Math.pow((channel + 0.055) / 1.055, 2.4);
+    });
+    const brightness =
+        0.2126 * luminance[0] +
+        0.7152 * luminance[1] +
+        0.0722 * luminance[2];
+
+    ctx.fillStyle = brightness > 0.179 ? '#111111' : '#ffffff';
+    ctx.textBaseline = 'top';
+
+    const attribution =
+        quoteImageData.title + ' — ' + quoteImageData.author;
+
+    ctx.font = '26px sans-serif';
+    const sourceLines = quoteLines(ctx, attribution, 904);
+    const sourceHeight = sourceLines.length * 36;
+    let layout = null;
+
+    for (let size = 58; size >= 22; size -= 2) {
+        ctx.font = size + 'px Georgia, serif';
+        const lines = quoteLines(ctx, quoteImageData.text, 904);
+        const lineHeight = Math.ceil(size * 1.45);
+        const height = lines.length * lineHeight + 48 + sourceHeight;
+
+        if (height <= 904) {
+            layout = {size, lines, lineHeight, height};
+            break;
+        }
+    }
+
+    document.getElementById('quote-copy').disabled = !layout;
+    document.getElementById('quote-download').disabled = !layout;
+
+    if (!layout) {
+        ctx.font = '30px sans-serif';
+        ctx.fillText('This text is too long for one square image.', 88, 480);
+        status.textContent =
+            'Choose a shorter annotation or note. No text has been cropped.';
+        return;
+    }
+
+    let y = Math.max(88, (1080 - layout.height) / 2);
+    ctx.font = layout.size + 'px Georgia, serif';
+
+    for (const line of layout.lines) {
+        ctx.fillText(line, 88, y);
+        y += layout.lineHeight;
+    }
+
+    y += 48;
+    ctx.font = '26px sans-serif';
+
+    for (const line of sourceLines) {
+        ctx.fillText(line, 88, y);
+        y += 36;
+    }
+
+    quoteImageReady = true;
+    status.textContent = '1080 × 1080 PNG · Full text included';
+}
+
+function quotePngBlob() {
+    return new Promise((resolve, reject) => {
+        document.getElementById('quote-canvas').toBlob(blob => {
+            if (blob) resolve(blob);
+            else reject(new Error('Could not create the PNG image.'));
+        }, 'image/png');
+    });
+}
+
+async function copyQuoteImage() {
+    if (!quoteImageReady) return;
+
+    const status = document.getElementById('quote-status');
+
+    if (!window.isSecureContext ||
+        !navigator.clipboard ||
+        !navigator.clipboard.write ||
+        !window.ClipboardItem) {
+        status.textContent =
+            'Image clipboard is unavailable here. Use Download PNG instead.';
+        return;
+    }
+
+    try {
+        await navigator.clipboard.write([
+            new ClipboardItem({'image/png': quotePngBlob()})
+        ]);
+        status.textContent =
+            'Image copied. Paste it into an application that accepts images.';
+    } catch (error) {
+        status.textContent =
+            'Copy was blocked or unsupported. Use Download PNG instead.';
+    }
+}
+
+async function downloadQuoteImage() {
+    if (!quoteImageReady) return;
+
+    try {
+        const blob = await quotePngBlob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'kobo-quote.png';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (error) {
+        document.getElementById('quote-status').textContent = error.message;
+    }
+}
+</script>
+""")
     parts.append("""
 <script>
 async function copyText(text, button) {
