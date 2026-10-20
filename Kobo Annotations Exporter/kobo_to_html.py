@@ -600,5 +600,10 @@ if __name__ == '__main__':
     import tkinter as tk
     from tkinter import ttk, filedialog, messagebox
     root = tk.Tk()
+
+    icon_path = Path(__file__).resolve().with_name('app_icon.ico')
+    if icon_path.is_file():
+        root.iconbitmap(default=str(icon_path))
+
     App(root)
     root.mainloop()
