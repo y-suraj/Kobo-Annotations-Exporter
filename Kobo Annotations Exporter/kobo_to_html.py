@@ -109,6 +109,92 @@ CSS = """\n:root { color-scheme: light; --ink:#25282e; --muted:#69717d; --line:#
 }\n
 @media print {
     .quote-dialog { display: none !important; }
+}\n
+/* Exported notebook theme */
+:root {
+    --page-bg: #f4f5f7;
+    --surface-bg: #ffffff;
+    --panel-bg: #f6f7f9;
+    --button-bg: #ffffff;
+    --ink: #25282e;
+    --muted: #69717d;
+    --line: #e0e3e8;
+    --link-color: #345d9d;
+    --quote-border: #e3b849;
+}\n
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --page-bg: #111318;
+    --surface-bg: #1b1e25;
+    --panel-bg: #252a34;
+    --button-bg: #303744;
+    --ink: #edf0f5;
+    --muted: #b4bdcc;
+    --line: #414a5a;
+    --link-color: #9dc2ff;
+    --quote-border: #e9bf5a;
+}\n
+
+body {
+    color: var(--ink);
+    background: var(--page-bg);
+}\n
+
+main,
+.quote-dialog {
+    color: var(--ink);
+    background: var(--surface-bg);
+    border-color: var(--line);
+}\n
+
+nav,
+.note {
+    background: var(--panel-bg);
+}\n
+
+button {
+    color: var(--ink);
+    background: var(--button-bg);
+    border-color: var(--line);
+}\n
+
+button:hover:not(:disabled) {
+    filter: brightness(0.93);
+}\n
+
+button:focus-visible,
+input:focus-visible {
+    outline: 2px solid var(--link-color);
+    outline-offset: 3px;
+}\n
+
+a {
+    color: var(--link-color);
+}\n
+
+blockquote {
+    border-left-color: var(--quote-border);
+}\n
+
+.toolbar {
+    flex-wrap: wrap;
+}\n
+
+@media print {
+    :root,
+    :root[data-theme="dark"] {
+        color-scheme: light;
+        --page-bg: #ffffff;
+        --surface-bg: #ffffff;
+        --panel-bg: #f6f7f9;
+        --button-bg: #ffffff;
+        --ink: #25282e;
+        --muted: #69717d;
+        --line: #e0e3e8;
+        --link-color: #345d9d;
+        --quote-border: #e3b849;
+    }\n
 }\n"""
 
 
@@ -119,7 +205,13 @@ def render_html(books):
              '<title>Kobo — Notes and Highlights</title><style>' + CSS + '</style></head><body><main>',
              '<h1>Notes and Highlights</h1>',
              f'<p class="subtitle">Kobo notebook · {len(books)} book(s) · {count} annotation(s)</p>',
-             '<div class="toolbar"><button onclick="window.print()">Print / Save as PDF</button></div><nav aria-label="Books">']
+             '<div class="toolbar">'
+             '<button type="button" onclick="window.print()">'
+             'Print / Save as PDF</button>'
+             '<button id="theme-toggle" type="button" '
+             'aria-pressed="false" onclick="toggleNotebookTheme()">'
+             'Switch to dark mode</button>'
+             '</div><nav aria-label="Books">']
     for i, book in enumerate(books):
         parts.append(f'<a href="#book-{i}">{esc(book["title"])} — {len(book["items"])} annotation(s)</a>')
     parts.append('</nav>')
@@ -452,6 +544,23 @@ async function copyText(text, button) {
 }
 </script>
     """)
+    parts.append("""
+<script>
+function toggleNotebookTheme() {
+    const root = document.documentElement;
+    const dark = root.dataset.theme !== 'dark';
+
+    root.dataset.theme = dark ? 'dark' : 'light';
+
+    const button = document.getElementById('theme-toggle');
+    button.textContent = dark
+        ? 'Switch to light mode'
+        : 'Switch to dark mode';
+
+    button.setAttribute('aria-pressed', String(dark));
+}
+</script>
+""")
     parts.append('<footer>Exported locally on ' + esc(datetime.now().strftime('%Y-%m-%d %H:%M')) + '. Entries are ordered by creation date. Source locations are not Kindle locations or reliable page numbers.</footer></main></body></html>')
     return '\n'.join(parts)
 
