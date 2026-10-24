@@ -1,0 +1,139 @@
+Kobo Annotations Exporter
+Proprietary Software Licence — Version 1.0
+
+Copyright © 2026 Suraj Yadav.
+All rights reserved except as expressly permitted below.
+
+1. Scope
+
+This licence applies to the original application code, executable,
+documentation, and other project material that Suraj Yadav ("Licensor")
+owns or is authorised to license as part of Kobo Annotations Exporter
+("Software").
+
+Third-party components and third-party content are not relicensed by
+this document. Their respective licences and rights continue to apply.
+
+2. Permitted use
+
+Subject to these terms, you may:
+
+a. Download, install, and run the Software for personal use or internal
+   use at work or in a business.
+
+b. Install and use the Software on multiple devices that you own or
+   are authorised to use.
+
+c. Make backup copies for your own use.
+
+d. Privately give an unchanged official executable to an individual
+   friend without charging a fee, provided this licence accompanies
+   the executable and all existing notices remain intact.
+
+e. Inspect and modify lawfully obtained source code, and build modified
+   executables, solely for your own private use or the internal use
+   of your organisation.
+
+For organisational use, access to source code and modified builds must
+remain within the organisation and be limited to personnel who need
+them for that internal use.
+
+Private modifications must retain the original ownership notices and
+must not be represented as official releases or as endorsed by the
+Licensor. You may identify your own modifications as your work.
+
+3. Restrictions
+
+Unless you obtain the Licensor's prior written permission, you may not:
+
+a. Sell, rent, sublicense, or otherwise commercially distribute the
+   Software or copies of it.
+
+b. Repackage or rebrand the Software for distribution, include it in a
+   product distributed to others, or claim authorship of the original
+   application.
+
+c. Upload or host the executable on another website, public repository,
+   app store, download service, or other public distribution platform.
+
+d. Publish or distribute the source code, modified source code, or
+   modified executables outside the private or internal-use permissions
+   granted in Section 2.
+
+e. Remove or obscure copyright, licence, or ownership notices.
+
+The permission to use the Software in a business does not grant
+permission to sell or redistribute the Software.
+
+You may freely share links to the Licensor's official project pages.
+
+4. Public repository hosting
+
+If the Licensor publishes the Software in a public repository, nothing
+in this licence limits permissions necessarily granted under the
+hosting platform's applicable terms, including GitHub's permissions
+to view and fork public repositories within its service.
+
+Those platform permissions do not constitute a separate grant under
+this licence to sell the Software, distribute modified executables,
+or republish the Software outside the platform.
+
+5. User content and exports
+
+The Licensor claims no ownership of your personal annotations, notes,
+or other content merely because you use the Software.
+
+This licence does not restrict your use of HTML files, images, or
+other output generated through normal use of the Software, except
+that it does not authorise redistributing the application itself.
+
+You remain responsible for permissions and third-party rights in
+book excerpts, images, or other material included in your exports.
+
+6. Ownership
+
+Rights in the original Software remain with their respective owners.
+This licence grants permission to use the Software; it does not
+transfer ownership.
+
+No rights in Rakuten Kobo's names, logos, or trademarks are granted.
+This project is not affiliated with or endorsed by Rakuten Kobo.
+
+7. Warranty and liability
+
+To the fullest extent permitted by applicable law, the Software is
+provided "as is" and "as available", without warranties of any kind,
+including warranties of fitness for a particular purpose,
+merchantability, or non-infringement.
+
+To the fullest extent permitted by applicable law, the Licensor is
+not liable for loss of data, lost profits, or indirect, incidental,
+special, or consequential damages arising from use of the Software.
+
+You should maintain backups of important device data and exports.
+
+Nothing in this licence excludes or limits rights or liabilities
+that cannot lawfully be excluded or limited.
+
+8. Breach
+
+If you materially breach this licence, the Licensor may terminate
+your permissions under it by written notice.
+
+On termination, you must stop using and distributing the Software
+and delete copies under your control, except where retention is
+required by law.
+
+Termination does not transfer ownership of your personal content
+or prevent you from retaining your exported notes and images.
+
+9. Other permissions
+
+Uses outside the permissions above require the Licensor's prior
+written permission.
+
+Permission requests may be submitted through the official project
+page or the contact method published by the Licensor.
+
+Nothing in this licence restricts rights that applicable law does
+not permit the Licensor to restrict.

@@ -280,3 +280,20 @@ For bug reports, include:
 - Browser name for HTML or clipboard issues.
 
 Do not attach a personal Kobo database or private annotations publicly.
+
+## Licence
+
+Kobo Annotations Exporter is distributed under a proprietary licence.
+See [LICENSE.txt](LICENSE.txt) for the full terms.
+
+- Personal and internal business use are allowed.
+- Installation on multiple authorised devices is allowed.
+- Private, free sharing of the unchanged official executable with
+  an individual friend is allowed, with the licence included.
+- Private and internal source-code modifications are allowed.
+- Resale, rebranding, public executable hosting, and redistribution
+  of source code or modified builds require written permission.
+
+These restrictions concern the application, not ownership of your
+personal notes or exported content. Third-party content rights
+still apply.
